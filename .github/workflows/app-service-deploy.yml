@@ -1,0 +1,66 @@
+﻿name: Deploy App Service
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+
+  pull_request:
+    branches: [ develop ]
+  workflow_dispatch:
+
+env:
+  Configuration: 'Release'
+  ProjectPath: 'WebApp/WebApp.csproj'
+  BuildPath: 'outputs/src'
+  ArtifactName: 'drop'
+  WebAppName: 'app-ghactions-deploy'
+
+jobs:
+  build-and-test-dotnet:
+    name: Run Build and Test .NET
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Fetch Sources
+        uses: actions/checkout@v3
+
+      - name: Setup .NET 6.0 SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 6.0.x
+
+      - name: Restore Nuget Packages
+        run: dotnet restore
+
+      - name: Build .NET Solution
+        run: |
+          dotnet build --no-restore /p:ContinuousIntegrationBuild=true --configuration $Configuration
+
+      - name: Run .NET Publish
+        run: |
+          dotnet publish $ProjectPath --configuration $Configuration --output $BuildPath --no-build
+
+      - name: Drop Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: "${{ env.ArtifactName }}"
+          path: "${{ env.BuildPath }}"
+  
+  deploy:
+    name: Deploy App Service
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: "${{ env.ArtifactName }}"
+          path: "${{ env.BuildPath }}"
+
+      - name: 'Run Azure webapp deploy action using publish profile credentials'
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: "${{ env.WebAppName }}"
+          publish-profile: "${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}"
+          package: "${{ env.BuildPath }}"
