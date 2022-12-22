@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - develop
+
   pull_request:
     branches: [ develop ]
   workflow_dispatch:
@@ -13,6 +14,13 @@ jobs:
   build-and-test-dotnet:
     name: Run Build and Test .NET
     runs-on: ubuntu-latest
+    
+    env:
+      Configuration: 'Release'
+      ProjectPath: 'WebApp/WebApp.csproj'
+      BuildPath: 'outputs/src'
+    
+    
     steps:
       - name: Fetch Sources
         uses: actions/checkout@v3
@@ -27,19 +35,14 @@ jobs:
 
       - name: Build .NET Solution
         run: |
-          dotnet build --no-restore /p:ContinuousIntegrationBuild=true --configuration Release
-          
-      - name: Run Unit Tests
-        working-directory: ./DotnetTemplate.Tests
-        run: |
-          dotnet test DotnetTemplate.Tests.csproj -p:CollectCoverage=true -p:CoverletOutputFormat=opencover -p:CoverletOutput=TestResults -p:SkipAutoProps=true -p:Threshold=80
-          
-#      - name: Run .NET Publish
-#        run: |
-#          dotnet publish "WebAppPath/WebAppProject.csproj" -r "linux-x64" -o "project-linux-build/src" --self-contained
+          dotnet build --no-restore /p:ContinuousIntegrationBuild=true --configuration $Configuration
 
-#      - name: Drop Artifact
-#        uses: actions/upload-artifact@v3
-#        with:
-#          name: project-linux-build
-#          path: project-linux-build/src
+      - name: Run .NET Publish
+        run: |
+          dotnet publish $ProjectPath --configuration $Configuration --output $BuildPath --no-build
+
+      - name: Drop Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: drop
+          path: "{{ env.BuildPath }}"
