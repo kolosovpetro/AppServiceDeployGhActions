@@ -49,6 +49,7 @@ jobs:
           path: "${{ env.BuildPath }}"
   
   deploy:
+    needs: [ build-and-test-dotnet ]
     name: Deploy App Service
     runs-on: ubuntu-latest
     
