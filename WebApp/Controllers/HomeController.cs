@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using System.Reflection;
 using WebApp.Models;
 
 namespace WebApp.Controllers;
@@ -15,6 +16,14 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
+        var version = Assembly.GetExecutingAssembly().GetName().Version;
+
+        if (version != null)
+        {
+            var assemblyVersion = version.ToString();
+            ViewBag.Message = $"Your application description page. Version: {assemblyVersion}";
+        }
+
         ViewBag.ConnectionString = _configExample.ConnectionString;
         ViewBag.BlobConnectionString = _configExample.BlobConnectionString;
         ViewBag.JwtSignGuid = _configExample.JwtSignGuid;
@@ -25,6 +34,14 @@ public class HomeController : Controller
 
     public IActionResult Privacy()
     {
+        var version = Assembly.GetExecutingAssembly().GetName().Version;
+
+        if (version != null)
+        {
+            var assemblyVersion = version.ToString();
+            ViewBag.Message = $"Your application description page. Version: {assemblyVersion}";
+        }
+
         ViewBag.ConnectionString = _configExample.ConnectionString;
         ViewBag.BlobConnectionString = _configExample.BlobConnectionString;
         ViewBag.JwtSignGuid = _configExample.JwtSignGuid;
